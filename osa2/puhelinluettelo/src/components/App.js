@@ -28,22 +28,23 @@ const App = () => {
     })
 
     const personExists = (newName) => {
-        const names = persons.map(person => person.name.toLowerCase())
-        const includes = names.includes(newName.toLowerCase())
+        const names = persons.map(person => person.name.toLowerCase().trim())
+        const includes = names.includes(newName.toLowerCase().trim())
         return includes
     }
 
     const addPerson = (event) => {
         event.preventDefault()
+
         const personObj = {
-            name: newName,
-            number: newNumber
+            name: newName.trim(),
+            number: newNumber.trim()
         }
 
         if (personExists(newName)) {
             if (window.confirm(`${newName} is already added to the phonebook,
             replace the old number with new one?`)) {
-                const oldPersonArray = persons.filter(p => p.name.toLowerCase() === personObj.name.toLowerCase())
+                const oldPersonArray = persons.filter(p => p.name.toLowerCase().trim() === personObj.name.toLowerCase().trim())
                 personService
                     .update(oldPersonArray[0].id, personObj)
                     .then(response => {
@@ -57,18 +58,25 @@ const App = () => {
                     })
 
             }
-
             setNewName('')
             setNewNumber('')
+
         } else {
             personService
                 .create(personObj)
                 .then(response => {
+                    console.log(response.body)
                     setPersons(persons.concat(response.data))
                     setNewName('')
                     setNewNumber('')
+                    showMessage(`Added ${personObj.name}!`, "completed")
                 })
-            showMessage(`Added ${personObj.name}!`, "completed")
+                .catch(error => {
+                    setNewName('')
+                    setNewNumber('')
+                    showMessage(JSON.stringify(error.response.data), "rejected")
+                    console.log("error", error.response.data)
+                })
 
         }
     }
